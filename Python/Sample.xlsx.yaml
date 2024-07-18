@@ -1,0 +1,74 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+paths:
+  endpoint:
+    post:
+      summary: Sample
+      description: 保留
+      operationId: operationId
+      responses:
+        '200':
+          description: レスポンスの説明
+          content:
+            application/json;charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  content-type:
+                    type: string
+                    description: レスポンスヘッダーのコンテンツタイプ
+                    example: application/json;charset=utf-8
+                  http-status:
+                    type: number
+                    description: HTTPのレスポンスコード
+                    example: 200
+                  result-code:
+                    type: string
+                    description: システム作成のコード
+                    example: R0000000
+                  result-message:
+                    type: string
+                    description: システム生成のメッセージ
+                    example: リクエスト完了
+                  user-id:
+                    type: string
+                    description: ユーザーID
+                    example: .nan
+                  user-info:
+                    type: list
+                    description: 所属名
+                    example: .nan
+                  user-name:
+                    type: string
+                    description: ユーザー氏名
+                    example: .nan
+                  user-birth:
+                    type: string
+                    description: ユーザー生年月日
+                    example: .nan
+                  user-phone-number:
+                    type: string
+                    description: ユーザー電話番号
+                    example: .nan
+          required:
+          - content-type
+          - http-status
+          - result-code
+          - result-message
+          - user-id
+          - user-info
+          - user-info
+          - user-info
+          - user-name
+          - user-birth
+          - user-phone-number
+      requestBody:
+        description: 未定
+        required: []
+        content:
+          application/json;charset=utf-8:
+            schema:
+              type: object
+              properties: {}
