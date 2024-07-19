@@ -11,7 +11,7 @@ df_sheet_output_fields = pd.read_excel(excel_file, sheet_name='出力項目定�
 # 読み込んだシートに対して処理を行う
 # Excel方眼紙であるために発生するUnnamedなヘッダーのカラムを削除し、冒頭2行に発生しがちな値がすべてNaNの行を取り除く
 # そもそも項目名で取り出すしいらない処理かもしれない
-## 少なくとも.dropna(how='all')はあったほうがスムーズに値を取り出せそう
+## 少なくともNaNを削除する.dropna(how='all')はあったほうがスムーズに値を取り出せそう
 df_sheet_input_fields = df_sheet_input_fields.loc[:, ~df_sheet_input_fields.columns.str.contains('^Unnamed')].dropna(how='all')
 df_sheet_output_fields = df_sheet_output_fields.loc[:, ~df_sheet_output_fields.columns.str.contains('^Unnamed')].dropna(how='all')
 
@@ -27,17 +27,18 @@ else:
 
 # Excelから取得できない部分の設定
 http_request_set = "post" #API設計書から判断する必要がある
-endpoint_path_set = "endpoint"
-operation_id_set = "operationId"
-response_code = ""#Excelファイルから取得した値から指定するか、なければ200指定？というか記載が無いだけで400とか他も設定必要では
+endpoint_path_set = "example_endpoint"
+operation_id_set = "example_operationId"
+response_code = "200"#Excelファイルから取得した値から指定するか、なければ200指定？というか記載が無いだけで400とか他も設定必要では->200決め打ちでいいっぽい
+responses_schema_type = "object"
 
 # Excelファイル内からレスポンスヘッダのコンテンツタイプ取得													
 input_fields_content_type = df_sheet_input_fields[df_sheet_input_fields['項目名（英語）'].str.contains('content-type', case=False)]['値の例'].iloc[0]
 output_fields_content_type = df_sheet_output_fields[df_sheet_output_fields['項目名（英語）'].str.contains('content-type', case=False)]['値の例'].iloc[0]
 
 #実行結果の確認。随時削除予定
-print(summary_text)
-print(input_fields_content_type)
+# print(summary_text)
+# print(input_fields_content_type)
 # print("入力項目定義")
 # print(df_sheet_input_fields)
 # print("出力項目定義")
@@ -52,14 +53,14 @@ No,階層,項目名（日本語）,項目名（英語）,データ型,桁数,必
 3. Excelから取得可能な情報は使って埋める
 以下は想定しているyamlファイルの完成形。プログラムで入れる部分は${}で示す。
 path:
-    ${endpoint_path_set}
+  ${endpoint_path_set}
     ${http_request_set}:
         tags:
         - 多分ファイル名で申請アプリ_XXX_でグループ化されているならあったほうがいいもの。いったん無視でいいかも
         summary:${summary_text}
         description: 保留
-        operation_id: ${operation_id_set}
-        ---メソッドがpostの場合---
+        operationId: ${operation_id_set}
+        ---メソッドがpost(get以外)の場合---
         requestBody:
             description:未定
             requiered: 
@@ -108,8 +109,8 @@ path:
                         英語項目名2:
                         ...
                     required:
-                        - 必須項目がyになっている項目名を列挙
-                        - 必須項目がyになっている項目名を列挙
+                        必須項目がyになっている項目名を列挙
+                        必須項目がyになっている項目名を列挙
     
 """
 # ここから実装
@@ -124,15 +125,15 @@ oas = {
         endpoint_path_set: {
             http_request_set: {
                 "summary": summary_text,  # 例: 保留
-                "description": "保留",
+                "description": "どう取得するか保留",
                 "operationId": operation_id_set,  # 例: 各自設定
                 "responses": {
-                    "200": {
-                        "description": "レスポンスの説明",
+                    response_code: {
+                        "description": "レスポンスの説明をどう取得するか保留",
                         "content": {
                             output_fields_content_type: {
                                 "schema": {
-                                    "type": "object",
+                                    "type": responses_schema_type,
                                     "properties": {}
                                 }
                             }
@@ -157,38 +158,107 @@ if http_request_set == "post":
                 }
             }
         }
-    }
+    }   
+
+# ネスト用のスタック
+#stack = []
 
 # リクエストボディ用の更新
 for index, row in df_sheet_input_fields.iterrows():
+    # ヘッダー行はスキップ
+    if row["種別"].lower() == "header":
+        continue
     field_name_english = row["項目名（英語）"]
     data_type = row["データ型"]
     description = row["項目の説明"]
     example = row["値の例"]
-    required = row["必須"].lower() == "y"
+    required = str(row["必須"]).lower() == "y"
+    hierarchy = row["階層"]
+
 
     prop = {
         "type": data_type,
-        "description": description,
-        "example": example
+        "description": description
     }
+    # example が NaN でない場合のみ追加
+    if not pd.isna(example):
+        prop["example"] = example
 
+    oas["paths"][endpoint_path_set][http_request_set]["requestBody"]["content"][input_fields_content_type]["schema"]["properties"][field_name_english] = prop
+
+    if required:
+        oas["paths"][endpoint_path_set][http_request_set]["requestBody"].setdefault("required", []).append(field_name_english)
+
+# responsesの更新
+# ネスト用のスタック
+stack = []
+current_properties = oas["paths"][endpoint_path_set][http_request_set]["responses"][response_code]["content"][output_fields_content_type]["schema"]["properties"]
 # レスポンスボディ用の更新
 for index, row in df_sheet_output_fields.iterrows():
+    # ヘッダー行はスキップ
+    if row["種別"].lower() == "header":
+        continue
     field_name_english = row["項目名（英語）"]
     data_type = row["データ型"]
     description = row["項目の説明"]
     example = row["値の例"]
-    required = row["必須"].lower() == "y"
+    hierarchy = int(row["階層"])
+    # 空白の場合.lowerがエラーになるので文字列に変換してから判定
+    required = str(row["必須"]).lower() == "y"
 
     prop = {
         "type": data_type,
-        "description": description,
-        "example": example
+        "description": description
     }
 
-    oas["paths"][endpoint_path_set][http_request_set]["responses"]["200"]["content"][output_fields_content_type]["schema"]["properties"][field_name_english] = prop
+    # プロパティの設定。listとなっていたらarrayに変換
+    if data_type == "list":
+        prop = {
+            "type": "array",
+            "description": description,
+            "items": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    else:
+        prop = {
+            "type": data_type,
+            "description": description
+        }
 
+    # example は NaN でない場合のみ追加
+    if not pd.isna(example):
+        prop["example"] = example
+    
+    # ネストの管理: 現在の階層より高い階層の要素をスタックから取り除く
+    while stack and stack[-1]['hierarchy'] >= hierarchy:
+        stack.pop()
+
+    # 現在の階層のプロパティに追加
+    if stack:
+        parent_properties = stack[-1]['object']['properties']
+        parent_properties[field_name_english] = prop
+    else:
+        current_properties[field_name_english] = prop
+
+    # properties の追加は object 型要素にのみ適用
+    if data_type == "object":
+        prop['properties'] = {}
+        stack.append({'hierarchy': hierarchy, 'object': prop})
+    # #　現状一番うまくいっているがネスト時に不要なpropertiesが含まれてしまうやつ    
+    # # 現在の階層のプロパティに追加
+    # if stack:
+    #     current_properties = stack[-1]['object']['properties']
+    # else:
+    #     current_properties = oas["paths"][endpoint_path_set][http_request_set]["responses"][response_code]["content"][output_fields_content_type]
+    # current_properties[field_name_english] = prop
+    # if 'properties' not in prop:
+    #     prop['properties'] = {}
+
+    # stack.append({'hierarchy': hierarchy, 'object': prop})
+    
+    # 必須項目の設定
     if required:
         oas["paths"][endpoint_path_set][http_request_set]["responses"]["200"].setdefault("required", []).append(field_name_english)
 

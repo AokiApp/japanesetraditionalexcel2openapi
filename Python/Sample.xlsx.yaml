@@ -3,27 +3,19 @@ info:
   title: API Documentation
   version: 1.0.0
 paths:
-  endpoint:
+  example_endpoint:
     post:
       summary: Sample
-      description: 保留
-      operationId: operationId
+      description: どう取得するか保留
+      operationId: example_operationId
       responses:
         '200':
-          description: レスポンスの説明
+          description: レスポンスの説明をどう取得するか保留
           content:
             application/json;charset=utf-8:
               schema:
                 type: object
                 properties:
-                  content-type:
-                    type: string
-                    description: レスポンスヘッダーのコンテンツタイプ
-                    example: application/json;charset=utf-8
-                  http-status:
-                    type: number
-                    description: HTTPのレスポンスコード
-                    example: 200
                   result-code:
                     type: string
                     description: システム作成のコード
@@ -35,40 +27,43 @@ paths:
                   user-id:
                     type: string
                     description: ユーザーID
-                    example: .nan
                   user-info:
                     type: list
+                    description: ユーザーの所属情報を格納するリスト
+                  affiliation-code:
+                    type: string
+                    description: 所属を表すコード
+                  affiliation-name:
+                    type: string
                     description: 所属名
-                    example: .nan
                   user-name:
                     type: string
                     description: ユーザー氏名
-                    example: .nan
                   user-birth:
                     type: string
                     description: ユーザー生年月日
-                    example: .nan
                   user-phone-number:
                     type: string
                     description: ユーザー電話番号
-                    example: .nan
           required:
-          - content-type
-          - http-status
           - result-code
           - result-message
           - user-id
           - user-info
-          - user-info
-          - user-info
+          - affiliation-code
+          - affiliation-name
           - user-name
-          - user-birth
           - user-phone-number
       requestBody:
         description: 未定
-        required: []
+        required:
+        - user-id
         content:
           application/json;charset=utf-8:
             schema:
               type: object
-              properties: {}
+              properties:
+                user-id:
+                  type: string
+                  description: ユーザーID
+                  example: XXXXX
