@@ -1,0 +1,69 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  version: 1.0.0
+paths:
+  example_endpoint:
+    post:
+      summary: Sample
+      description: どう取得するか保留
+      operationId: example_operationId
+      responses:
+        '200':
+          description: レスポンスの説明をどう取得するか保留
+          content:
+            application/json;charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  result-code:
+                    type: string
+                    description: システム作成のコード
+                    example: R0000000
+                  result-message:
+                    type: string
+                    description: システム生成のメッセージ
+                    example: リクエスト完了
+                  user-id:
+                    type: string
+                    description: ユーザーID
+                  user-info:
+                    type: list
+                    description: ユーザーの所属情報を格納するリスト
+                  affiliation-code:
+                    type: string
+                    description: 所属を表すコード
+                  affiliation-name:
+                    type: string
+                    description: 所属名
+                  user-name:
+                    type: string
+                    description: ユーザー氏名
+                  user-birth:
+                    type: string
+                    description: ユーザー生年月日
+                  user-phone-number:
+                    type: string
+                    description: ユーザー電話番号
+          required:
+          - result-code
+          - result-message
+          - user-id
+          - user-info
+          - affiliation-code
+          - affiliation-name
+          - user-name
+          - user-phone-number
+      requestBody:
+        description: 未定
+        required:
+        - user-id
+        content:
+          application/json;charset=utf-8:
+            schema:
+              type: object
+              properties:
+                user-id:
+                  type: string
+                  description: ユーザーID
+                  example: XXXXX

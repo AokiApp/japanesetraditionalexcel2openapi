@@ -1,0 +1,6 @@
+No,階層,項目名（日本語）,項目名（英語）,データ型,桁数,必須,入出力区分,種別,項目の説明,値の例
+1,1,コンテンツタイプ,content-type,string,y,入力,HEADER,レスポンスヘッダーのコンテンツタイプ,application/json;charset=utf-8
+2,1,HTTPステータスコード,http-status,number,3,y,入力,HEADER,HTTPのレスポンスコード,200
+3,1,氏名,user-name,string,,y,入力,BODY,ユーザー氏名
+4,1,生年月日,user-birth,string,,y,入力,BODY,ユーザー生年月日
+5,1,電話番号,user-phone-number,string,,y,入力,BODY,ユーザー電話番号
